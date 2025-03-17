@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wolf Tapper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #0a0a0a;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #fff;
+            border-top: 5px solid #00ff00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #notification {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        #notification p {
+            margin: 0;
+            font-size: 14px;
+        }
+        #notification button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        #tabs {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background-color: #1e1e1e;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 20;
+            border-top: 1px solid #333;
+        }
+        .tab-button {
+            padding: 5px;
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .tab-button:hover, .tab-button.active {
+            color: #fff;
+        }
+        .tab-button img {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 2px;
+            filter: brightness(0.7);
+        }
+        .tab-button.active img {
+            filter: brightness(1);
+        }
+        .tab-content {
+            display: none;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+        #home-tab.active, #frens-tab.active, #tasks-tab.active, #wallet-tab.active {
+            display: block;
+        }
+        #home-tab {
+            text-align: center;
+            padding-top: 20px;
+        }
+        #home-tab h3, #tasks-tab h3, #frens-tab h3, #wallet-tab h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        #wallet-tab {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 0;
+        }
+        #wallet-tab .header {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.2;
+        }
+        #wallet-tab .connect-button {
+            padding: 12px 24px;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+        #wallet-tab .connect-button:hover {
+            transform: scale(1.05);
+        }
+        #wallet-tab .sub-tabs {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        #wallet-tab .sub-tab {
+            padding: 10px 20px;
+            background-color: #1e1e1e;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #wallet-tab .sub-tab:hover, #wallet-tab .sub-tab.active {
+            background-color: #333;
+        }
+        #wallet-tab .points-value {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background-color: #333;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        #wallet-tab .info-section {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            width: 90%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        #wallet-tab .info-section .icons {
+            display: flex;
+            gap: 10px;
+        }
+        #wallet-tab .info-section .icons img {
+            width: 24px;
+            height: 24px;
+        }
+        #wallet-tab .info-section p {
+            flex-grow: 1;
+            text-align: left;
+            margin: 0;
+            font-size: 14px;
+        }
+        #wallet-tab .info-section .arrow {
+            font-size: 20px;
+        }
+        .points-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        .points-item .info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .points-item .info img {
+            width: 30px;
+            height: 30px;
+        }
+        .mini-game-section {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        .mini-game-section .info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .mini-game-section .info img {
+            width: 40px;
+            height: 40px;
+        }
+        .mini-game-section .action button {
+            padding: 10px 20px;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .mini-game-section .action button:hover {
+            transform: scale(1.05);
+        }
+        #game-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        #game-area {
+            position: relative;
+            width: 90%;
+            height: 60%;
+            background-color: #111;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        #target {
+            position: absolute;
+            font-size: 40px;
+            cursor: pointer;
+            display: none;
+        }
+        #game-score {
+            margin: 10px 0;
+            font-size: 20px;
+        }
+        #game-timer {
+            font-size: 16px;
+            color: #ccc;
+        }
+        #close-game {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        #play-again {
+            padding: 12px 24px;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            display: none;
+            transition: transform 0.2s;
+        }
+        #play-again:hover {
+            transform: scale(1.05);
+        }
+        #tasks-tab .task-item {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        #tasks-tab .task-item.completed {
+            background-color: #333;
+        }
+        #tasks-tab .task-item button {
+            padding: 8px 16px;
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        #tasks-tab .task-item.completed button {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+        #frens-tab .referral-section {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        #frens-tab .referral-section p {
+            margin: 0 0 10px;
+            font-size: 14px;
+        }
+        #frens-tab .referral-section button {
+            padding: 10px 20px;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #frens-tab .referral-section button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <div id="notification">
+        <p>Season 1 is here! Play mini games and earn Wolf points.</p>
+        <button onclick="closeNotification()">✖</button>
+    </div>
+
+    <div id="tabs">
+        <button class="tab-button" onclick="openTab('home-tab')">
+            <img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" alt="Home">
+            Home
+        </button>
+        <button class="tab-button" onclick="openTab('tasks-tab')">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" alt="Tasks">
+            Tasks
+        </button>
+        <button class="tab-button" onclick="openTab('frens-tab')">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Frens">
+            Frens
+        </button>
+        <button class="tab-button" onclick="openTab('wallet-tab')">
+            <img src="https://cdn-icons-png.flaticon.com/512/2331/2331970.png" alt="Wallet">
+            Wallet
+        </button>
+    </div>
+
+    <div id="home-tab" class="tab-content active">
+        <h3>Game</h3>
+        <div class="mini-game-section">
+            <div class="info">
+                <img src="https://cdn-icons-png.flaticon.com/512/616/616490.png" alt="Drop Game">
+                <div>
+                    <span>Drop Game</span>
+                    <p id="play-passes">500 Play passes</p>
+                </div>
+            </div>
+            <div class="action">
+                <button onclick="openGame()">Play</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-overlay">
+        <button id="close-game" onclick="closeGame()">✖</button>
+        <h3>Drop Game!</h3>
+        <p>Click on the wolf to catch it! You have 30 seconds.</p>
+        <div id="game-area">
+            <div id="target">🐺</div>
+        </div>
+        <p id="game-score">Score: 0</p>
+        <p id="game-timer">Time: 30s</p>
+        <button id="play-again" onclick="resetGame()">Play Again</button>
+    </div>
+
+    <div id="tasks-tab" class="tab-content">
+        <h3>Tasks & Quests</h3>
+        <div class="task-item" id="task-1">
+            <div class="info">
+                <span>Play your first game</span>
+            </div>
+            <button onclick="completeTask('task-1', 100)">Claim 100 MP</button>
+        </div>
+        <div class="task-item" id="task-2">
+            <div class="info">
+                <span>Invite a friend</span>
+            </div>
+            <button onclick="completeTask('task-2', 200)">Claim 200 MP</button>
+        </div>
+    </div>
+
+    <div id="frens-tab" class="tab-content">
+        <h3>Frens</h3>
+        <div class="referral-section">
+            <p>Invite friends and earn 500 MP per referral!</p>
+            <button onclick="shareReferral()">Share Referral Link</button>
+        </div>
+        <div class="points-item">
+            <div class="info">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Referrals">
+                <span>Referrals</span>
+            </div>
+            <div class="action">
+                <span id="referralCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="wallet-tab" class="tab-content">
+        <div class="header">
+            Get real crypto.<br>Earn and buy any tokens.
+        </div>
+        <button class="connect-button" onclick="connectWallet()">Connect wallet</button>
+        <div class="sub-tabs">
+            <button class="sub-tab active" onclick="openSubTab('points')">Points</button>
+            <button class="sub-tab" onclick="openSubTab('balances')">Balances</button>
+            <button class="sub-tab" onclick="openSubTab('history')">History</button>
+        </div>
+        <div class="points-value">$0</div>
+        <div class="points-item" id="points-section">
+            <div class="info">
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Meme Points">
+                <span>Meme points</span>
+            </div>
+            <div class="action">
+                <span id="memePoints">0 MP</span>
+            </div>
+        </div>
+        <div class="points-item" id="dogs-section">
+            <div class="info">
+                <img src="https://cdn-icons-png.flaticon.com/512/194/194271.png" alt="Dogs">
+                <span>Dogs</span>
+            </div>
+            <div class="action">
+                <span id="dogsPoints">0 DP</span>
+            </div>
+        </div>
+        <div class="info-section">
+            <div class="icons">
+                <img src="https://cdn-icons-png.flaticon.com/512/616/616490.png" alt="Icon 1">
+                <img src="https://cdn-icons-png.flaticon.com/512/194/194271.png" alt="Icon 2">
+            </div>
+            <p>Earn more in Drop game, Tasks and Quests.</p>
+            <div class="arrow">></div>
+        </div>
+    </div>
+
+    <script>
+        let memePoints = 0;
+        let dogsPoints = 0;
+        let playPasses = 500;
+        let gameScore = 0;
+        let gameTime = 30;
+        let gameInterval = null;
+        let targetInterval = null;
+        let referralCount = 0;
+        let hasPlayedGame = false;
+
+        // DOM Elemanları
+        const loadingScreen = document.getElementById("loadingScreen");
+        const playPassesDisplay = document.getElementById("play-passes");
+        const gameOverlay = document.getElementById("game-overlay");
+        const target = document.getElementById("target");
+        const gameScoreDisplay = document.getElementById("game-score");
+        const gameTimerDisplay = document.getElementById("game-timer");
+        const playAgainButton = document.getElementById("play-again");
+        const gameArea = document.getElementById("game-area");
+        const memePointsDisplay = document.getElementById("memePoints");
+        const dogsPointsDisplay = document.getElementById("dogsPoints");
+        const referralCountDisplay = document.getElementById("referralCount");
+
+        // Eleman Kontrolü
+        function checkElements() {
+            const elements = {
+                loadingScreen, playPassesDisplay, gameOverlay, target,
+                gameScoreDisplay, gameTimerDisplay, playAgainButton, gameArea,
+                memePointsDisplay, dogsPointsDisplay, referralCountDisplay
+            };
+            Object.entries(elements).forEach(([key, value]) => {
+                if (!value) {
+                    console.error(`${key} elemanı bulunamadı!`);
+                } else {
+                    console.log(`${key} elemanı bulundu.`);
+                }
+            });
+            return Object.values(elements).every(el => el !== null);
+        }
+
+        function initializeApp() {
+            console.log("Uygulama başlatılıyor...");
+            if (!checkElements()) {
+                console.error("Bazı elemanlar eksik, uygulama başlatılamıyor!");
+                return;
+            }
+            checkDailyLogin();
+            updateDisplay();
+            loadingScreen.style.display = "none";
+            console.log("Yükleme ekranı kapatıldı.");
+        }
+
+        function openTab(tabId) {
+            console.log(`Sekme açılıyor: ${tabId}`);
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-button[onclick="openTab('${tabId}')"]`).classList.add('active');
+        }
+
+        function openSubTab(tabId) {
+            console.log(`Alt sekme açılıyor: ${tabId}`);
+            document.querySelectorAll('.sub-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.sub-tab[onclick="openSubTab('${tabId}')"]`).classList.add('active');
+        }
+
+        function closeNotification() {
+            console.log("Bildirim kapatılıyor...");
+            document.getElementById("notification").style.display = "none";
+        }
+
+        function connectWallet() {
+            console.log("Cüzdan bağlanıyor...");
+            alert("Wallet connection coming soon!");
+        }
+
+        function openGame() {
+            console.log("Oyun açılmaya çalışılıyor...");
+            if (!gameOverlay || !gameArea || !target || !gameScoreDisplay || !gameTimerDisplay || !playAgainButton) {
+                console.error("Oyun elemanları eksik:", {
+                    gameOverlay: !!gameOverlay,
+                    gameArea: !!gameArea,
+                    target: !!target,
+                    gameScoreDisplay: !!gameScoreDisplay,
+                    gameTimerDisplay: !!gameTimerDisplay,
+                    playAgainButton: !!playAgainButton
+                });
+                alert("Oyun yüklenirken bir hata oluştu. Konsolu kontrol et!");
+                return;
+            }
+            if (playPasses <= 0) {
+                console.warn("Oyun hakkı kalmadı!");
+                alert("Oyun hakkı kalmadı!");
+                return;
+            }
+            playPasses--;
+            hasPlayedGame = true;
+            updateDisplay();
+            console.log("Oyun overlay açılıyor...");
+            gameOverlay.style.display = "flex";
+            startGame();
+        }
+
+        function closeGame() {
+            console.log("Oyun kapatılıyor...");
+            if (gameInterval) clearInterval(gameInterval);
+            if (targetInterval) clearInterval(targetInterval);
+            gameOverlay.style.display = "none";
+            target.style.display = "none";
+            playAgainButton.style.display = "none";
+            gameScore = 0;
+            gameTime = 30;
+            gameScoreDisplay.textContent = `Score: ${gameScore}`;
+            gameTimerDisplay.textContent = `Time: ${gameTime}s`;
+        }
+
+        function startGame() {
+            console.log("Oyun başlatılıyor...");
+            if (!gameArea || !target) {
+                console.error("Oyun alanı veya hedef eksik!");
+                return;
+            }
+            gameScore = 0;
+            gameTime = 30;
+            gameScoreDisplay.textContent = `Score: ${gameScore}`;
+            gameTimerDisplay.textContent = `Time: ${gameTime}s`;
+            playAgainButton.style.display = "none";
+            target.style.display = "block";
+            moveTarget();
+
+            gameInterval = setInterval(() => {
+                if (gameTime <= 0) {
+                    endGame();
+                } else {
+                    gameTime--;
+                    gameTimerDisplay.textContent = `Time: ${gameTime}s`;
+                }
+            }, 1000);
+
+            targetInterval = setInterval(moveTarget, 1500);
+        }
+
+        function moveTarget() {
+            if (!gameArea || !target) {
+                console.error("Oyun alanı veya hedef eksik!");
+                return;
+            }
+            const gameAreaRect = gameArea.getBoundingClientRect();
+            const targetSize = 40;
+            const maxX = gameAreaRect.width - targetSize;
+            const maxY = gameAreaRect.height - targetSize;
+            const newX = Math.random() * maxX;
+            const newY = Math.random() * maxY;
+            target.style.left = `${newX}px`;
+            target.style.top = `${newY}px`;
+            console.log(`Hedef taşındı: (${newX}, ${newY})`);
+        }
+
+        function endGame() {
+            console.log("Oyun bitiriliyor...");
+            if (gameInterval) clearInterval(gameInterval);
+            if (targetInterval) clearInterval(targetInterval);
+            target.style.display = "none";
+            let bonus = gameScore >= 10 ? 200 : 0;
+            memePoints += gameScore * 50 + bonus;
+            dogsPoints += gameScore * 10;
+            alert(`Oyun bitti! Skor: ${gameScore}, Bonus: ${bonus}`);
+            updateDisplay();
+            playAgainButton.style.display = "block";
+        }
+
+        function resetGame() {
+            console.log("Oyun sıfırlanıyor...");
+            if (playPasses <= 0) {
+                alert("Oyun hakkı kalmadı!");
+                closeGame();
+                return;
+            }
+            playPasses--;
+            updateDisplay();
+            playAgainButton.style.display = "none";
+            startGame();
+        }
+
+        target.addEventListener("click", () => {
+            if (target.style.display !== "none") {
+                gameScore++;
+                gameScoreDisplay.textContent = `Score: ${gameScore}`;
+                moveTarget();
+                console.log("Hedefe tıklandı, skor:", gameScore);
+            }
+        });
+
+        setInterval(() => {
+            if (playPasses < 500) {
+                playPasses++;
+                updateDisplay();
+            }
+        }, 600000);
+
+        function checkDailyLogin() {
+            const userId = 'guest'; // Telegram dışı test için
+            const lastLogin = localStorage.getItem(`lastLogin_${userId}`);
+            const today = new Date().toISOString().split('T')[0];
+
+            if (lastLogin !== today) {
+                memePoints += 100;
+                alert("Günlük giriş bonusu! +100 Meme Points kazandın!");
+                localStorage.setItem(`lastLogin_${userId}`, today);
+                updateDisplay();
+            }
+        }
+
+        function completeTask(taskId, reward) {
+            const taskElement = document.getElementById(taskId);
+            if (taskElement.classList.contains('completed')) {
+                alert("Bu görev zaten tamamlandı!");
+                return;
+            }
+            if (taskId === 'task-1' && !hasPlayedGame) {
+                alert("Önce bir oyun oynamalısın!");
+                return;
+            }
+            if (taskId === 'task-2' && referralCount === 0) {
+                alert("Önce bir arkadaş davet etmelisin!");
+                return;
+            }
+            memePoints += reward;
+            taskElement.classList.add('completed');
+            taskElement.querySelector('button').textContent = "Completed";
+            alert(`Görev tamamlandı! +${reward} Meme Points kazandın!`);
+            updateDisplay();
+        }
+
+        function shareReferral() {
+            const userId = 'guest';
+            const referralLink = `https://t.me/wolftapperbot?start=${userId}`;
+            navigator.clipboard.writeText(referralLink).then(() => {
+                alert("Referans linkin kopyalandı! Arkadaşlarınla paylaş ve 500 MP kazan!");
+            }).catch(() => {
+                alert("Link kopyalanamadı, manuel olarak paylaş: " + referralLink);
+            });
+            referralCount++;
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            playPassesDisplay.textContent = `${playPasses} Play passes`;
+            memePointsDisplay.textContent = `${memePoints} MP`;
+            dogsPointsDisplay.textContent = `${dogsPoints} DP`;
+            referralCountDisplay.textContent = referralCount;
+            console.log("Ekran güncellendi:", { playPasses, memePoints, dogsPoints, referralCount });
+        }
+
+        window.addEventListener("load", () => {
+            console.log("Sayfa yüklendi, uygulamayı başlatıyorum...");
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
